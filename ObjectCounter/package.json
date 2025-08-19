@@ -1,7 +1,7 @@
 {
-  "name": "objectcounter",
+  "name": "genauo",
   "version": "1.0.0",
-  "main": "index.ts",
+  "private": true,
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,28 +9,41 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-navigation/bottom-tabs": "^7.4.6",
-    "@react-navigation/native": "^7.1.17",
-    "@react-navigation/stack": "^7.4.7",
-    "expo": "~53.0.20",
+    "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-community/slider": "4.5.6",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/stack": "^6.3.20",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "@tensorflow/tfjs-react-native": "^1.0.0",
+    "expo": "53.0.20",
+    "expo-blur": "^14.1.5",
     "expo-camera": "~16.1.11",
+    "expo-dev-client": "~5.2.4",
     "expo-file-system": "~18.1.11",
+    "expo-gl": "^15.1.7",
+    "expo-image-manipulator": "~13.1.7",
+    "expo-linear-gradient": "^14.1.5",
     "expo-media-library": "~17.1.7",
+    "expo-sharing": "~13.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.5",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
-    "react-native-vision-camera": "^4.7.1",
-    "@shopify/react-native-skia": "v2.0.0-next.4"
+    "react-native-webview": "13.13.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@types/react": "~19.0.10",
-    "typescript": "~5.8.3"
-  },
-  "private": true
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.0.0",
+    "typescript": "^5.1.3"
+  }
 }
