@@ -40,11 +40,23 @@ export default function ReviewScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [manualCorrections, setManualCorrections] = useState(0);
-  const [mode, setMode] = useState<'auto' | 'manual'>('auto');
+  const [mode, setMode] = useState<'auto' | 'manual'>('manual');
   const [objectType, setObjectType] = useState('objects');
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [autoCount, setAutoCount] = useState<number | null>(null);
+  const [manualCountInput, setManualCountInput] = useState('');
+  
+  const handleManualCountChange = (text: string) => {
+    setManualCountInput(text);
+    const count = parseInt(text) || 0;
+    
+    // If user enters a number, clear existing detections and create placeholder detections
+    if (count > 0 && count !== detections.length) {
+      setDetections([]);
+      setManualCorrections(0);
+    }
+  };
 
   useEffect(() => {
     setupImage();
@@ -136,18 +148,28 @@ export default function ReviewScreen() {
       );
       setDetections([...detections, newDetection]);
       setManualCorrections(manualCorrections + 1);
+      
+      // Update manual count input to match the number of detections
+      setManualCountInput((detections.length + 1).toString());
     }
   };
 
   const removeDetection = (id: string) => {
-    setDetections(detections.filter(d => d.id !== id));
+    const newDetections = detections.filter(d => d.id !== id);
+    setDetections(newDetections);
     setManualCorrections(manualCorrections + 1);
+    
+    // Update manual count input to match the number of detections
+    if (mode === 'manual') {
+      setManualCountInput(newDetections.length.toString());
+    }
   };
 
   const clearAll = () => {
     setDetections([]);
     setManualCorrections(0);
     setAutoCount(null);
+    setManualCountInput('');
   };
 
   const switchToManual = () => {
@@ -163,16 +185,25 @@ export default function ReviewScreen() {
 
   const saveCount = async () => {
     try {
+      const count = mode === 'manual' 
+        ? parseInt(manualCountInput) || 0 
+        : detections.length;
+      
+      if (mode === 'manual' && count === 0) {
+        Alert.alert('Error', 'Please enter a count value');
+        return;
+      }
+
       await StorageService.addImageToSession(
         sessionId,
         photoPath,
-        detections.length,
+        count,
         detections
       );
 
       Alert.alert(
         'Count Saved',
-        `${detections.length} ${objectType} counted`,
+        `${count} ${objectType} counted`,
         [
           {
             text: 'Add Another Image',
@@ -215,31 +246,6 @@ export default function ReviewScreen() {
         <View style={styles.modeContainer}>
           <View style={styles.modeSelector}>
             <TouchableOpacity
-              style={[styles.modeButton, mode === 'auto' && styles.modeButtonActive]}
-              onPress={switchToAuto}
-              activeOpacity={0.8}
-            >
-              {mode === 'auto' && (
-                <LinearGradient
-                  colors={['#FF671F', '#FF8A4C']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={StyleSheet.absoluteFillObject}
-                />
-              )}
-              <View style={styles.modeButtonContent}>
-                <Ionicons 
-                  name="sparkles" 
-                  size={20} 
-                  color={mode === 'auto' ? '#fff' : '#666'} 
-                />
-                <Text style={[styles.modeButtonText, mode === 'auto' && styles.modeButtonTextActive]}>
-                  AI Count
-                </Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
               style={[styles.modeButton, mode === 'manual' && styles.modeButtonActive]}
               onPress={switchToManual}
               activeOpacity={0.8}
@@ -263,12 +269,37 @@ export default function ReviewScreen() {
                 </Text>
               </View>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.modeButton, mode === 'auto' && styles.modeButtonActive]}
+              onPress={switchToAuto}
+              activeOpacity={0.8}
+            >
+              {mode === 'auto' && (
+                <LinearGradient
+                  colors={['#FF671F', '#FF8A4C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+              )}
+              <View style={styles.modeButtonContent}>
+                <Ionicons 
+                  name="sparkles" 
+                  size={20} 
+                  color={mode === 'auto' ? '#fff' : '#666'} 
+                />
+                <Text style={[styles.modeButtonText, mode === 'auto' && styles.modeButtonTextActive]}>
+                  AI Count
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
           
           <Text style={styles.modeDescription}>
             {mode === 'auto' 
               ? 'AI automatically detects and counts objects'
-              : 'Tap on each object to count manually'}
+              : 'Enter the number directly or tap objects to count'}
           </Text>
         </View>
 
@@ -337,16 +368,32 @@ export default function ReviewScreen() {
               <Text style={styles.countLabel}>
                 {mode === 'auto' ? 'AI Detection' : 'Manual Count'}
               </Text>
-              <View style={styles.countRow}>
-                <Text style={styles.countNumber}>{detections.length}</Text>
-                <Text style={styles.countUnit}>{objectType}</Text>
-              </View>
+              {mode === 'manual' ? (
+                <View style={styles.manualCountContainer}>
+                  <TextInput
+                    style={styles.manualCountInput}
+                    placeholder="0"
+                    placeholderTextColor="#666"
+                    value={manualCountInput}
+                    onChangeText={handleManualCountChange}
+                    keyboardType="numeric"
+                    textAlign="center"
+                    maxLength={4}
+                  />
+                  <Text style={styles.countUnit}>{objectType}</Text>
+                </View>
+              ) : (
+                <View style={styles.countRow}>
+                  <Text style={styles.countNumber}>{detections.length}</Text>
+                  <Text style={styles.countUnit}>{objectType}</Text>
+                </View>
+              )}
               {autoCount !== null && mode === 'manual' && (
                 <Text style={styles.aiReference}>
                   AI detected: {autoCount}
                 </Text>
               )}
-              {manualCorrections > 0 && (
+              {manualCorrections > 0 && mode === 'auto' && (
                 <View style={styles.correctionsBadge}>
                   <Ionicons name="create-outline" size={14} color="#FFD700" />
                   <Text style={styles.correctionsText}>
@@ -386,13 +433,13 @@ export default function ReviewScreen() {
       {/* Save Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity
-          style={[styles.saveButton, (isProcessing || detections.length === 0) && styles.saveButtonDisabled]}
+          style={[styles.saveButton, (isProcessing || (mode === 'auto' ? detections.length === 0 : !manualCountInput.trim())) && styles.saveButtonDisabled]}
           onPress={saveCount}
-          disabled={isProcessing || detections.length === 0}
+          disabled={isProcessing || (mode === 'auto' ? detections.length === 0 : !manualCountInput.trim())}
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={isProcessing || detections.length === 0 ? ['#333', '#222'] : ['#FF671F', '#FF8A4C']}
+            colors={isProcessing || (mode === 'auto' ? detections.length === 0 : !manualCountInput.trim()) ? ['#333', '#222'] : ['#FF671F', '#FF8A4C']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.saveButtonGradient}
@@ -616,6 +663,19 @@ const styles = StyleSheet.create({
     color: '#FF671F',
     fontSize: 56,
     fontWeight: '800',
+  },
+  manualCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  manualCountInput: {
+    color: '#FF671F',
+    fontSize: 56,
+    fontWeight: '800',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    minWidth: 80,
   },
   countUnit: {
     color: '#666',
